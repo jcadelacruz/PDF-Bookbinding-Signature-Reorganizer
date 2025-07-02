@@ -93,21 +93,31 @@
         });
 
         function createPagePattern(totalPages) {
-            const pagesPerSignature = 8;
+            const pagesPerSignature = 16;
             const signaturesNeeded = Math.floor(totalPages / pagesPerSignature);
             let pagePattern = [];
 
+            //for each signature
             for (let i = 0; i < signaturesNeeded; i++) {
                 let signature = [];
                 const startPage = i * pagesPerSignature;
-                signature.push(startPage + 7); // Page 8
-                signature.push(startPage); // Page 1
+                
+                //for each sheet in the signature
+                for(let j=0; j<pagesPerSignature/2; j+=2){
+                    signature.push(startPage + pagesPerSignature-1-j);//end
+                    signature.push(startPage+j);//start
+                    signature.push(startPage + 1+j);//start other side
+                    signature.push(startPage + pagesPerSignature-2-j);//end other side
+                    
+                }
+                
+                /*signature.push(startPage); // Page 1
                 signature.push(startPage + 1); // Page 2
                 signature.push(startPage + 6); // Page 7
                 signature.push(startPage + 5); // Page 6
                 signature.push(startPage + 2); // Page 3
                 signature.push(startPage + 3); // Page 4
-                signature.push(startPage + 4); // Page 5
+                signature.push(startPage + 4); // Page 5*/
                 pagePattern.push(signature);
             }
 
