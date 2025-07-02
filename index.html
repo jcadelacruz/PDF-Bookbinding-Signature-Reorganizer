@@ -16,9 +16,13 @@
     <br>
     <label for="signaturize">If you wish to create signatures, input instead the number of pages and the program will reorganize automatically (except the last remainder of #pages divided by 8 pages)</label>
     <button id="signaturize">Signaturize</button>
+    <div id="download-link" style="display: none;">
+        <a id="download" href="#" download="reordered.pdf">Download Reordered PDF</a>
+    </div>
 
     <script>
         document.getElementById('reorder').addEventListener('click', async () => {
+            console.log('running reordering function');
             const fileInput = document.getElementById('upload');
             const file = fileInput.files[0];
             const pageOrderInput = document.getElementById('pageOrder').value;
@@ -39,25 +43,42 @@
 
             // Check if the page indices are valid
             for (const pageIndex of pagesToSelect) {
-                if (pageIndex < 0 || pageIndex >= pdfDoc.getPageCount()) {
+                if (pageIndex < 0 || pageIndex > pdfDoc.getPageCount()) {
                     alert(`Page index ${pageIndex} is out of range. The document has ${pdfDoc.getPageCount()} pages.`);
                     return;
                 }
             }
+            
+            console.log('test');
 
             // Reorder pages based on user input
+            let j=0;
             for (const pageIndex of pagesToSelect) {
                 const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageIndex]);
                 newPdfDoc.addPage(copiedPage);
+                console.log(j);
+                j++;
             }
 
+            console.log('test2');
             // Save the new PDF document
+            const pdfBytes = await newPdfDoc.save();
+            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+            const downloadLink = document.getElementById('download');
+            
+            console.log('test3');
+            // Create a URL for the Blob and set it as the href of the link
+            downloadLink.href = URL.createObjectURL(blob);
+            document.getElementById('download-link').style.display = 'block'; // Show the link
+            console.log('function end');
+            /* Save the new PDF document
             const pdfBytes = await newPdfDoc.save();
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
             link.download = 'reordered.pdf';
-            link.click();
+            document.getElementById('home').appendChild(link);
+            //link.click();*/
         });
 
         
