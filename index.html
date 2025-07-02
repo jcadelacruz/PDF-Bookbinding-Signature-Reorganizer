@@ -80,12 +80,11 @@
                 pagePattern.push(signature);
             }
             if(totalPages % pagesPerSignature != 0){
-              let signature = [];
-              for (let i=0; i < totalPages % pagesPerSignature; i++){
-                
-                signature.push(pagesPerSignature*signaturesNeeded+1+i);
-              }
-              pagePattern.push(signature);
+                let signature = [];
+                for (let i=0; i < totalPages % pagesPerSignature; i++){    
+                    signature.push(pagesPerSignature*signaturesNeeded+1+i);
+                }
+                pagePattern.push(signature);
             }
 
             const totalPrintedPages = signaturesNeeded * pagesPerSignature;
