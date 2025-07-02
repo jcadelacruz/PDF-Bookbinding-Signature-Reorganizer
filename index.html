@@ -1,5 +1,4 @@
-
-</html><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -9,12 +8,16 @@
 </head>
 <body>
     <h1>PDF Reorder Tool</h1>
-    <input type="file" id="upload" accept="application/pdf"> <br><br>
+    <input type="file" id="upload" accept="application/pdf">
+    <br><br>
     <label for="pageOrder">Enter page order (comma-separated, e.g., 1,0):</label>
-    <input type="text" id="pageOrder" placeholder="0,1,2,..." value=""> <br><br>
+    <input type="text" id="pageOrder" placeholder="0,1,2,..." value="">
+    <br><br>
     <button id="reorder">Reorder PDF</button>
     <br>
-    <label for="signaturize">If you wish to create signatures, input instead the number of pages and the program will reorganize automatically (except the last remainder of #pages divided by 8 pages)</label>
+    <label for="signaturize">If you wish to create signatures, input the number of pages and the program will reorganize automatically (except the last remainder of #pages divided by 8 pages)</label>
+    <br>
+    <input type="number" id="signaturePages" placeholder="Total number of pages">
     <button id="signaturize">Signaturize</button>
     <div id="download-link" style="display: none;">
         <a id="download" href="#" download="reordered.pdf">Download Reordered PDF</a>
@@ -22,7 +25,6 @@
 
     <script>
         document.getElementById('reorder').addEventListener('click', async () => {
-            console.log('running reordering function');
             const fileInput = document.getElementById('upload');
             const file = fileInput.files[0];
             const pageOrderInput = document.getElementById('pageOrder').value;
@@ -43,45 +45,28 @@
 
             // Check if the page indices are valid
             for (const pageIndex of pagesToSelect) {
-                if (pageIndex < 0 || pageIndex > pdfDoc.getPageCount()) {
+                if (pageIndex < 0 || pageIndex >= pdfDoc.getPageCount()) {
                     alert(`Page index ${pageIndex} is out of range. The document has ${pdfDoc.getPageCount()} pages.`);
                     return;
                 }
             }
-            
-            console.log('test');
 
             // Reorder pages based on user input
-            let j=0;
             for (const pageIndex of pagesToSelect) {
                 const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageIndex]);
                 newPdfDoc.addPage(copiedPage);
-                console.log(j);
-                j++;
             }
 
-            console.log('test2');
             // Save the new PDF document
             const pdfBytes = await newPdfDoc.save();
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const downloadLink = document.getElementById('download');
-            
-            console.log('test3');
+
             // Create a URL for the Blob and set it as the href of the link
             downloadLink.href = URL.createObjectURL(blob);
-            document.getElementById('download-link').style.display = 'block'; // Show the link
-            console.log('function end');
-            /* Save the new PDF document
-            const pdfBytes = await newPdfDoc.save();
-            const blob = new Blob([pdfBytes], { type: 'application/pdf' });
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = 'reordered.pdf';
-            document.getElementById('home').appendChild(link);
-            //link.click();*/
+            document.getElementById('download-link').style.display = 'block';
         });
 
-        
         function createPagePattern(totalPages) {
             const pagesPerSignature = 8;
             const signaturesNeeded = Math.floor(totalPages / pagesPerSignature);
@@ -100,17 +85,17 @@
                 signature.push(startPage + 4); // Page 5
                 pagePattern.push(signature);
             }
-            if(totalPages % pagesPerSignature != 0){
+
+            if (totalPages % pagesPerSignature !== 0) {
                 let signature = [];
-                for (let i=0; i < totalPages % pagesPerSignature; i++){    
-                    signature.push(pagesPerSignature*signaturesNeeded+1+i);
+                for (let i = 0; i < totalPages % pagesPerSignature; i++) {
+                    signature.push(pagesPerSignature * signaturesNeeded + 1 + i);
                 }
                 pagePattern.push(signature);
-            }
+                }
 
             const totalPrintedPages = signaturesNeeded * pagesPerSignature;
             const extraBlankPages = totalPrintedPages - totalPages;
-            
             return { pattern: pagePattern, extraBlankPages: extraBlankPages > 0 ? extraBlankPages : 0 };
         }
 
@@ -119,21 +104,21 @@
         }
 
         document.getElementById('signaturize').addEventListener('click', () => {
-            const pageOrderInput = document.getElementById('pageOrder').value;
-            let totalPages = parseInt(pageOrderInput);
+            const totalPagesInput = document.getElementById('signaturePages').value;
+            let totalPages = parseInt(totalPagesInput);
+
+            if (isNaN(totalPages) || totalPages <= 0) {
+                alert('Please enter a valid number of pages.');
+                return;
+            }
+
             let createdPageOrder = createPagePattern(totalPages);
             createdPageOrder.final = createPageOrder(flattenArray(createdPageOrder.pattern));
             updatePageOrderElement(createdPageOrder.final);
         });
 
         function createPageOrder(patternArray) {
-            let patternString = "";
-            for (let i = 0; i < patternArray.length; i++) {
-                patternString += patternArray[i];
-                if (i === patternArray.length - 1) continue;
-                patternString += ",";
-            }
-            return patternString;
+            return patternArray.join(',');
         }
 
         function updatePageOrderElement(patternString) {
