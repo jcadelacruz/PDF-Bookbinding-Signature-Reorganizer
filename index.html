@@ -24,7 +24,24 @@
     </div>
 
     <script>
+        function disableReorderButton(){
+            const reorder = document.getElementById('reorder');
+            reorder.disabled = true;
+            renameReorderButton('processing...');
+        }
+        function renameReorderButton(name){
+            const reorder = document.getElementById('reorder');
+            reorder.innerHTML = name;
+        }
+        function enableReorderButton() {
+            const reorder = document.getElementById('reorder');
+            reorder.disabled = false;
+            renameReorderButton("Reorder PDF");
+        }
+    
         document.getElementById('reorder').addEventListener('click', async () => {
+            disableReorderButton();
+            
             const fileInput = document.getElementById('upload');
             const file = fileInput.files[0];
             const pageOrderInput = document.getElementById('pageOrder').value;
@@ -44,27 +61,35 @@
             const pagesToSelect = pageOrderInput.split(',').map(Number);
 
             // Check if the page indices are valid
+            const pageCount = pdfDoc.getPageCount();
             for (const pageIndex of pagesToSelect) {
-                if (pageIndex < 0 || pageIndex >= pdfDoc.getPageCount()) {
+                if (pageIndex < 0 || pageIndex > pageCount) {
                     alert(`Page index ${pageIndex} is out of range. The document has ${pdfDoc.getPageCount()} pages.`);
                     return;
                 }
             }
 
             // Reorder pages based on user input
+            let j=0;
             for (const pageIndex of pagesToSelect) {
                 const [copiedPage] = await newPdfDoc.copyPages(pdfDoc, [pageIndex]);
                 newPdfDoc.addPage(copiedPage);
+                
+                j++
+                renameReorderButton('processing... page '+j+'/'+pageCount);
             }
 
             // Save the new PDF document
             const pdfBytes = await newPdfDoc.save();
+            renameReorderButton('saving...');
             const blob = new Blob([pdfBytes], { type: 'application/pdf' });
             const downloadLink = document.getElementById('download');
 
             // Create a URL for the Blob and set it as the href of the link
             downloadLink.href = URL.createObjectURL(blob);
             document.getElementById('download-link').style.display = 'block';
+            
+            enableReorderButton();
         });
 
         function createPagePattern(totalPages) {
@@ -74,7 +99,7 @@
 
             for (let i = 0; i < signaturesNeeded; i++) {
                 let signature = [];
-                const startPage = i * pagesPerSignature + 1;
+                const startPage = i * pagesPerSignature;
                 signature.push(startPage + 7); // Page 8
                 signature.push(startPage); // Page 1
                 signature.push(startPage + 1); // Page 2
@@ -89,7 +114,7 @@
             if (totalPages % pagesPerSignature !== 0) {
                 let signature = [];
                 for (let i = 0; i < totalPages % pagesPerSignature; i++) {
-                    signature.push(pagesPerSignature * signaturesNeeded + 1 + i);
+                    signature.push(pagesPerSignature * signaturesNeeded + i);
                 }
                 pagePattern.push(signature);
                 }
