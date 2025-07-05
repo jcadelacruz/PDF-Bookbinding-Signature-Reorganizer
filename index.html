@@ -18,6 +18,7 @@
     <label for="signaturize">If you wish to create signatures, input the number of pages and the program will reorganize automatically (except the last remainder of #pages divided by 8 pages)</label>
     <br>
     <input type="number" id="signaturePages" placeholder="Total number of pages">
+    <input type="number" id="sheetsPerSignature" placeholder="number of sheets per signature (4 pages per sheet)">
     <button id="signaturize">Signaturize</button>
     <div id="download-link" style="display: none;">
         <a id="download" href="#" download="reordered.pdf">Download Reordered PDF</a>
@@ -92,8 +93,8 @@
             enableReorderButton();
         });
 
-        function createPagePattern(totalPages) {
-            const pagesPerSignature = 16;
+        function createPagePattern(sheetsPerSignature, totalPages) {
+            const pagesPerSignature = sheetsPerSignature*4;
             const signaturesNeeded = Math.floor(totalPages / pagesPerSignature);
             let pagePattern = [];
 
@@ -146,8 +147,16 @@
                 alert('Please enter a valid number of pages.');
                 return;
             }
+            
+            const sheetsInput = document.getElementById('sheetsPerSignature').value;
+            let sheetsPerSignature = parseInt(sheetsInput);
 
-            let createdPageOrder = createPagePattern(totalPages);
+            if (isNaN(sheetsPerSignature) || sheetsPerSignature <= 0) {
+                alert('Please enter a valid number of sheets per signature.');
+                return;
+            }
+
+            let createdPageOrder = createPagePattern(sheetsPerSignature, totalPages);
             createdPageOrder.final = createPageOrder(flattenArray(createdPageOrder.pattern));
             updatePageOrderElement(createdPageOrder.final);
         });
